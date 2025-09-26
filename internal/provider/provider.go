@@ -95,6 +95,7 @@ func (p *OrbStackProvider) Resources(_ context.Context) []func() resource.Resour
 	return []func() resource.Resource{
 		NewMachineResource,
 		NewConfigResource,
+		NewK8sResource,
 	}
 }
 
@@ -102,6 +103,7 @@ func (p *OrbStackProvider) DataSources(_ context.Context) []func() datasource.Da
 	return []func() datasource.DataSource{
 		NewMachineDataSource,
 		NewImagesDataSource,
+		NewK8sStatusDataSource,
 	}
 }
 

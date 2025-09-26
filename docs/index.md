@@ -53,11 +53,13 @@ The provider supports the following configuration options:
 
 - [`orbstack_machine`](resources/machine.md) - Create and manage Linux machines
 - [`orbstack_config`](resources/config.md) - Manage OrbStack configuration settings
+- [`orbstack_k8s`](resources/k8s.md) - Enable/disable Kubernetes cluster
 
 ## Data Sources
 
 - [`orbstack_machine`](data-sources/machine.md) - Read information about existing machines
 - [`orbstack_images`](data-sources/images.md) - List available container images
+- [`orbstack_k8s_status`](data-sources/k8s_status.md) - Get Kubernetes cluster status
 
 ## Examples
 
@@ -67,3 +69,4 @@ See the [examples/](../examples/) directory for complete usage examples:
 - [Debian with specific version](../examples/debian-tag/)
 - [Machine sizing and validation](../examples/machine-sizing/)
 - [Cloud-init from file](../examples/cloud-init-file/)
+- [Kubernetes cluster management](../examples/k8s/)
