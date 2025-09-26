@@ -44,6 +44,10 @@ The provider supports the following configuration options:
 | Name | Type | Default | Description |
 |------|------|---------|-------------|
 | `orb_path` | `string` | `"orb"` | Path to the OrbStack CLI executable |
+| `default_user` | `string` | - | Default user for SSH metadata (read-only usage) |
+| `default_ssh_key_path` | `string` | - | Default SSH public key path for metadata/reporting |
+| `create_timeout` | `string` | `"5m"` | Timeout for machine creation (e.g., 5m) |
+| `delete_timeout` | `string` | `"5m"` | Timeout for machine deletion (e.g., 5m) |
 
 ## Resources
 

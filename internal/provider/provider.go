@@ -94,15 +94,15 @@ func (p *OrbStackProvider) Configure(ctx context.Context, req provider.Configure
 func (p *OrbStackProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewMachineResource,
-        NewConfigResource,
+		NewConfigResource,
 	}
 }
 
 func (p *OrbStackProvider) DataSources(_ context.Context) []func() datasource.DataSource {
-    return []func() datasource.DataSource{
-        NewMachineDataSource,
-        NewImagesDataSource,
-    }
+	return []func() datasource.DataSource{
+		NewMachineDataSource,
+		NewImagesDataSource,
+	}
 }
 
 // Helper to extract string value or default if null/unknown/empty
