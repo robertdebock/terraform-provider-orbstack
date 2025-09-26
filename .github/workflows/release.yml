@@ -19,11 +19,16 @@ jobs:
         with:
           go-version: '1.22'
 
+      - name: Prepare passphrase file
+        run: echo -n "" > pass.txt
+
       - name: Import GPG key
-        if: secrets.GPG_PRIVATE_KEY && secrets.GPG_PASSPHRASE
+        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
         run: |
           echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
-          echo "$GPG_PASSPHRASE" > pass.txt
+          if [ -n "$GPG_PASSPHRASE" ]; then
+            echo "$GPG_PASSPHRASE" > pass.txt
+          fi
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
           GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
