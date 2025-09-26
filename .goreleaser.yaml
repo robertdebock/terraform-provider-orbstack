@@ -11,7 +11,7 @@ builds:
     env:
       - CGO_ENABLED=0
     goos: [darwin]
-    goarch: [arm64]
+    goarch: [arm64, amd64]
     binary: terraform-provider-orbstack_v{{ .Version }}
 
 archives:
