@@ -22,11 +22,15 @@ jobs:
       - name: Prepare passphrase file
         run: echo -n "" > pass.txt
 
-      - name: Import GPG key
-        if: ${{ secrets.GPG_PRIVATE_KEY != '' }}
+      - name: Import GPG key (if provided)
         run: |
-          echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
-          if [ -n "$GPG_PASSPHRASE" ]; then
+          if [ -n "${GPG_PRIVATE_KEY}" ]; then
+            echo "Importing GPG key"
+            echo "$GPG_PRIVATE_KEY" | gpg --batch --yes --import
+          else
+            echo "No GPG key provided; skipping import"
+          fi
+          if [ -n "${GPG_PASSPHRASE}" ]; then
             echo "$GPG_PASSPHRASE" > pass.txt
           fi
         env:
