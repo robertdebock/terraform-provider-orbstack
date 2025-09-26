@@ -14,7 +14,6 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -39,12 +38,12 @@ type MachineModel struct {
 	CloudInitFile types.String `tfsdk:"cloud_init_file"`
 	ValidateImage types.Bool   `tfsdk:"validate_image"`
 
-	// Sizing and lifecycle
-	CPUs        types.Int64  `tfsdk:"cpus"`
-	MemoryMiB   types.Int64  `tfsdk:"memory_mib"`
-	DiskSizeGiB types.Int64  `tfsdk:"disk_size_gib"`
-	PowerState  types.String `tfsdk:"power_state"`
-	Arch        types.String `tfsdk:"arch"`
+	// User configuration
+	Username types.String `tfsdk:"username"`
+
+	// Machine configuration
+	PowerState types.String `tfsdk:"power_state"`
+	Arch       types.String `tfsdk:"arch"`
 
 	IPAddress types.String `tfsdk:"ip_address"`
 	Status    types.String `tfsdk:"status"`
@@ -92,26 +91,11 @@ func (r *MachineResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				Optional:    true,
 				Description: "Validate image exists before create; fail fast if unknown.",
 			},
-			"cpus": schema.Int64Attribute{
+			"username": schema.StringAttribute{
 				Optional:    true,
-				Description: "Number of vCPUs (create-time; may require replacement).",
-				PlanModifiers: []planmodifier.Int64{
-					// conservative: recreate on change until in-place is verified
-					int64planmodifier.RequiresReplace(),
-				},
-			},
-			"memory_mib": schema.Int64Attribute{
-				Optional:    true,
-				Description: "Memory in MiB (create-time; may require replacement).",
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
-				},
-			},
-			"disk_size_gib": schema.Int64Attribute{
-				Optional:    true,
-				Description: "Root disk size in GiB (create-time only).",
-				PlanModifiers: []planmodifier.Int64{
-					int64planmodifier.RequiresReplace(),
+				Description: "Username for the default user (defaults to macOS username).",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
 				},
 			},
 			"power_state": schema.StringAttribute{
@@ -213,21 +197,14 @@ func (r *MachineResource) Create(ctx context.Context, req resource.CreateRequest
 
 	// set_password removed (interactive-only flag not supported by Terraform)
 
-	// Sizing flags (best-effort). If orb does not support, we'll retry without them.
-	sizingArgs := []string{}
-	if !plan.CPUs.IsNull() && !plan.CPUs.IsUnknown() && plan.CPUs.ValueInt64() > 0 {
-		sizingArgs = append(sizingArgs, "--cpus", fmt.Sprintf("%d", plan.CPUs.ValueInt64()))
-	}
-	if !plan.MemoryMiB.IsNull() && !plan.MemoryMiB.IsUnknown() && plan.MemoryMiB.ValueInt64() > 0 {
-		sizingArgs = append(sizingArgs, "--memory", fmt.Sprintf("%d", plan.MemoryMiB.ValueInt64()))
-	}
-	if !plan.DiskSizeGiB.IsNull() && !plan.DiskSizeGiB.IsUnknown() && plan.DiskSizeGiB.ValueInt64() > 0 {
-		sizingArgs = append(sizingArgs, "--disk", fmt.Sprintf("%d", plan.DiskSizeGiB.ValueInt64()))
-	}
-
 	// Architecture flag
 	if v := strings.TrimSpace(plan.Arch.ValueString()); v != "" {
 		args = append(args, "-a", v)
+	}
+
+	// Username flag
+	if v := strings.TrimSpace(plan.Username.ValueString()); v != "" {
+		args = append(args, "-u", v)
 	}
 
 	// Use image directly (may include OS:VERSION format)
@@ -246,18 +223,12 @@ func (r *MachineResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
-	argsWithSizing := append(append([]string{}, args...), append(sizingArgs, imageArg, name)...)
-	argsNoSizing := append(append([]string{}, args...), imageArg, name)
+	args = append(args, imageArg, name)
 
-	// Try create with sizing first; if it fails, retry without sizing for compatibility.
-	_, stderr, err := runOrb(ctx, cfg.OrbPath, argsWithSizing...)
+	_, stderr, err := runOrb(ctx, cfg.OrbPath, args...)
 	if err != nil {
-		// retry without sizing
-		_, stderr, err = runOrb(ctx, cfg.OrbPath, argsNoSizing...)
-		if err != nil {
-			resp.Diagnostics.AddError("failed to create machine", fmt.Sprintf("orb error: %s", stderr))
-			return
-		}
+		resp.Diagnostics.AddError("failed to create machine", fmt.Sprintf("orb error: %s", stderr))
+		return
 	}
 
 	model, diags := readUntilReady(ctx, cfg, name, cfg.CreateTimeout)
