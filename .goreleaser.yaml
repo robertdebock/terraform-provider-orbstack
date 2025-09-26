@@ -1,0 +1,49 @@
+project_name: terraform-provider-orbstack
+
+before:
+  hooks:
+    - go mod tidy
+
+builds:
+  - id: provider
+    main: ./cmd/terraform-provider-orbstack
+    env:
+      - CGO_ENABLED=0
+    goos: [darwin]
+    goarch: [arm64]
+    binary: terraform-provider-orbstack_v{{ .Version }}
+
+archives:
+  - id: zip
+    builds: [provider]
+    format: zip
+    name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
+    files:
+      - '{{ .Binary }}'
+
+checksum:
+  name_template: '{{ .ProjectName }}_{{ .Version }}_SHA256SUMS'
+  algorithm: sha256
+
+signs:
+  - id: sign-checksums
+    cmd: gpg
+    artifacts: checksum
+    args:
+      - --armor
+      - --batch
+      - --yes
+      - --pinentry-mode
+      - loopback
+      - --passphrase-file
+      - '{{ .Env.GPG_PASSPHRASE_FILE }}'
+      - --detach-sign
+      - --output
+      - '{{ .ArtifactPath }}.sig'
+      - '{{ .ArtifactPath }}'
+
+release:
+  draft: false
+  prerelease: false
+
+

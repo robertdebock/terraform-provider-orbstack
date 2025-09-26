@@ -1,0 +1,38 @@
+# Binaries
+bin/
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Go build
+build/
+*.test
+*.out
+
+# Go modules
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+terraform.tfstate*
+crash.log
+crash.*.log
+terraform.tfstate.d/
+.terraform.tfstate.lock.info
+*.tfplan
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+.terraformrc
+terraform.rc
+
+# macOS
+.DS_Store
