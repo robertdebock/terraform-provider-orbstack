@@ -17,7 +17,7 @@ builds:
 archives:
   - id: zip
     builds: [provider]
-    format: zip
+    formats: [zip]
     name_template: '{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
     wrap_in_directory: false
 
