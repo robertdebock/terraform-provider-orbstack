@@ -29,6 +29,7 @@ signs:
   - id: sign-checksums
     cmd: gpg
     artifacts: checksum
+    signature: "${artifact}.sig"
     args:
       - --armor
       - --batch
@@ -39,8 +40,8 @@ signs:
       - '{{ .Env.GPG_PASSPHRASE_FILE }}'
       - --detach-sign
       - --output
-      - '{{ .ArtifactPath }}.sig'
-      - '{{ .ArtifactPath }}'
+      - '${signature}'
+      - '${artifact}'
 
 release:
   draft: false
