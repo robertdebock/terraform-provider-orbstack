@@ -22,9 +22,7 @@ jobs:
           go-version: '1.22'
 
       - name: Prepare passphrase file
-        run: |
-          echo -n "" > pass.txt
-          git status --porcelain
+        run: echo -n "" > "$RUNNER_TEMP/pass.txt"
 
       - name: Import GPG key (if provided)
         run: |
@@ -35,7 +33,7 @@ jobs:
             echo "No GPG key provided; skipping import"
           fi
           if [ -n "${GPG_PASSPHRASE}" ]; then
-            echo "$GPG_PASSPHRASE" > pass.txt
+            echo "$GPG_PASSPHRASE" > "$RUNNER_TEMP/pass.txt"
           fi
         env:
           GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
@@ -48,6 +46,6 @@ jobs:
             args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          GPG_PASSPHRASE_FILE: pass.txt
+          GPG_PASSPHRASE_FILE: ${{ runner.temp }}/pass.txt
 
 
