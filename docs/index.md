@@ -21,8 +21,7 @@ provider "orbstack" {
 # Create a Linux machine
 resource "orbstack_machine" "vm" {
   name   = "demo-vm"
-  image  = "ubuntu"
-  tag    = "24.04"  # Optional
+  image  = "ubuntu:noble"  # Use OS:VERSION format for specific versions
 }
 
 # Manage OrbStack settings
@@ -61,6 +60,6 @@ The provider supports the following configuration options:
 See the [examples/](../examples/) directory for complete usage examples:
 
 - [Ubuntu with cloud-init](../examples/ubuntu-cloudinit/)
-- [Debian with specific tag](../examples/debian-tag/)
+- [Debian with specific version](../examples/debian-tag/)
 - [Machine sizing and validation](../examples/machine-sizing/)
 - [Cloud-init from file](../examples/cloud-init-file/)

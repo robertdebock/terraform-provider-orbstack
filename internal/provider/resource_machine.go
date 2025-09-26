@@ -3,22 +3,22 @@ package provider
 import (
 	"context"
 	"fmt"
-    "os"
-    "path/filepath"
+	"os"
+	"path/filepath"
 	"regexp"
 	"strings"
-    "time"
+	"time"
 
+	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
 	"github.com/hashicorp/terraform-plugin-framework/diag"
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
-	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/int64planmodifier"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
-	"github.com/hashicorp/terraform-plugin-framework/types"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
-	"github.com/hashicorp/terraform-plugin-framework-validators/stringvalidator"
+	"github.com/hashicorp/terraform-plugin-framework/types"
 )
 
 var _ resource.Resource = &MachineResource{}
@@ -32,20 +32,19 @@ type MachineResource struct {
 }
 
 type MachineModel struct {
-	ID        types.String `tfsdk:"id"`
-	Name      types.String `tfsdk:"name"`
-	Image     types.String `tfsdk:"image"`
-	Tag       types.String `tfsdk:"tag"`
-	CloudInit types.String `tfsdk:"cloud_init"`
-    CloudInitFile types.String `tfsdk:"cloud_init_file"`
-    ValidateImage types.Bool `tfsdk:"validate_image"`
+	ID            types.String `tfsdk:"id"`
+	Name          types.String `tfsdk:"name"`
+	Image         types.String `tfsdk:"image"`
+	CloudInit     types.String `tfsdk:"cloud_init"`
+	CloudInitFile types.String `tfsdk:"cloud_init_file"`
+	ValidateImage types.Bool   `tfsdk:"validate_image"`
 
-    // Sizing and lifecycle
-    CPUs        types.Int64  `tfsdk:"cpus"`
-    MemoryMiB   types.Int64  `tfsdk:"memory_mib"`
-    DiskSizeGiB types.Int64  `tfsdk:"disk_size_gib"`
-    PowerState  types.String `tfsdk:"power_state"`
-    Arch        types.String `tfsdk:"arch"`
+	// Sizing and lifecycle
+	CPUs        types.Int64  `tfsdk:"cpus"`
+	MemoryMiB   types.Int64  `tfsdk:"memory_mib"`
+	DiskSizeGiB types.Int64  `tfsdk:"disk_size_gib"`
+	PowerState  types.String `tfsdk:"power_state"`
+	Arch        types.String `tfsdk:"arch"`
 
 	IPAddress types.String `tfsdk:"ip_address"`
 	Status    types.String `tfsdk:"status"`
@@ -73,11 +72,7 @@ func (r *MachineResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			},
 			"image": schema.StringAttribute{
 				Optional:    true,
-				Description: "Base image/distribution (e.g., ubuntu, debian, alpine). Default ubuntu.",
-			},
-			"tag": schema.StringAttribute{
-				Optional:    true,
-				Description: "Optional image tag/version (if supported by OrbStack).",
+				Description: "Base image/distribution (e.g., ubuntu, debian, alpine). Use OS:VERSION format for specific versions (e.g., ubuntu:noble, debian:bookworm). Default ubuntu.",
 			},
 			"cloud_init": schema.StringAttribute{
 				Optional:    true,
@@ -86,52 +81,52 @@ func (r *MachineResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 					stringplanmodifier.RequiresReplace(),
 				},
 			},
-            "cloud_init_file": schema.StringAttribute{
-                Optional:    true,
-                Description: "Path to a cloud-init user data file. Overrides cloud_init if both set.",
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplace(),
-                },
-            },
-            "validate_image": schema.BoolAttribute{
-                Optional:    true,
-                Description: "Validate image (and tag) exists before create; fail fast if unknown.",
-            },
-            "cpus": schema.Int64Attribute{
-                Optional:    true,
-                Description: "Number of vCPUs (create-time; may require replacement).",
-                PlanModifiers: []planmodifier.Int64{
-                    // conservative: recreate on change until in-place is verified
-                    int64planmodifier.RequiresReplace(),
-                },
-            },
-            "memory_mib": schema.Int64Attribute{
-                Optional:    true,
-                Description: "Memory in MiB (create-time; may require replacement).",
-                PlanModifiers: []planmodifier.Int64{
-                    int64planmodifier.RequiresReplace(),
-                },
-            },
-            "disk_size_gib": schema.Int64Attribute{
-                Optional:    true,
-                Description: "Root disk size in GiB (create-time only).",
-                PlanModifiers: []planmodifier.Int64{
-                    int64planmodifier.RequiresReplace(),
-                },
-            },
-            "power_state": schema.StringAttribute{
-                Optional:    true,
-                Description: "Desired power state: running or stopped.",
-                Validators:  []validator.String{stringvalidator.OneOf("running", "stopped")},
-            },
-            "arch": schema.StringAttribute{
-                Optional:    true,
-                Description: "Architecture passed to orb (-a): amd64 or arm64.",
-                Validators:  []validator.String{stringvalidator.OneOf("amd64", "arm64")},
-                PlanModifiers: []planmodifier.String{
-                    stringplanmodifier.RequiresReplace(),
-                },
-            },
+			"cloud_init_file": schema.StringAttribute{
+				Optional:    true,
+				Description: "Path to a cloud-init user data file. Overrides cloud_init if both set.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
+			"validate_image": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Validate image exists before create; fail fast if unknown.",
+			},
+			"cpus": schema.Int64Attribute{
+				Optional:    true,
+				Description: "Number of vCPUs (create-time; may require replacement).",
+				PlanModifiers: []planmodifier.Int64{
+					// conservative: recreate on change until in-place is verified
+					int64planmodifier.RequiresReplace(),
+				},
+			},
+			"memory_mib": schema.Int64Attribute{
+				Optional:    true,
+				Description: "Memory in MiB (create-time; may require replacement).",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
+			},
+			"disk_size_gib": schema.Int64Attribute{
+				Optional:    true,
+				Description: "Root disk size in GiB (create-time only).",
+				PlanModifiers: []planmodifier.Int64{
+					int64planmodifier.RequiresReplace(),
+				},
+			},
+			"power_state": schema.StringAttribute{
+				Optional:    true,
+				Description: "Desired power state: running or stopped.",
+				Validators:  []validator.String{stringvalidator.OneOf("running", "stopped")},
+			},
+			"arch": schema.StringAttribute{
+				Optional:    true,
+				Description: "Architecture passed to orb (-a): amd64 or arm64.",
+				Validators:  []validator.String{stringvalidator.OneOf("amd64", "arm64")},
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
+			},
 			"ip_address": schema.StringAttribute{
 				Computed:    true,
 				Description: "Machine IP address.",
@@ -183,90 +178,89 @@ func (r *MachineResource) Create(ctx context.Context, req resource.CreateRequest
 		image = "ubuntu"
 	}
 
-    args := []string{"create"}
+	args := []string{"create"}
 
-    // cloud-init: file takes precedence over inline
-    if f := strings.TrimSpace(plan.CloudInitFile.ValueString()); f != "" {
-        // ensure the file exists and pass absolute path
-        if _, err := os.Stat(f); err != nil {
-            resp.Diagnostics.AddError("cloud_init_file not found", err.Error())
-            return
-        }
-        abs, err := filepath.Abs(f)
-        if err != nil {
-            resp.Diagnostics.AddError("failed to resolve cloud_init_file path", err.Error())
-            return
-        }
-        args = append(args, "-c", abs)
-    } else if v := plan.CloudInit.ValueString(); strings.TrimSpace(v) != "" {
-        tmpFile, err := os.CreateTemp("", "orbstack-cloudinit-*.yaml")
-        if err != nil {
-            resp.Diagnostics.AddError("failed to create temp file for cloud-init", err.Error())
-            return
-        }
-        defer os.Remove(tmpFile.Name())
-        if _, err := tmpFile.WriteString(v); err != nil {
-            resp.Diagnostics.AddError("failed to write cloud-init to temp file", err.Error())
-            return
-        }
-        if err := tmpFile.Close(); err != nil {
-            resp.Diagnostics.AddError("failed to close cloud-init temp file", err.Error())
-            return
-        }
-        args = append(args, "-c", tmpFile.Name())
-    }
+	// cloud-init: file takes precedence over inline
+	if f := strings.TrimSpace(plan.CloudInitFile.ValueString()); f != "" {
+		// ensure the file exists and pass absolute path
+		if _, err := os.Stat(f); err != nil {
+			resp.Diagnostics.AddError("cloud_init_file not found", err.Error())
+			return
+		}
+		abs, err := filepath.Abs(f)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to resolve cloud_init_file path", err.Error())
+			return
+		}
+		args = append(args, "-c", abs)
+	} else if v := plan.CloudInit.ValueString(); strings.TrimSpace(v) != "" {
+		tmpFile, err := os.CreateTemp("", "orbstack-cloudinit-*.yaml")
+		if err != nil {
+			resp.Diagnostics.AddError("failed to create temp file for cloud-init", err.Error())
+			return
+		}
+		defer os.Remove(tmpFile.Name())
+		if _, err := tmpFile.WriteString(v); err != nil {
+			resp.Diagnostics.AddError("failed to write cloud-init to temp file", err.Error())
+			return
+		}
+		if err := tmpFile.Close(); err != nil {
+			resp.Diagnostics.AddError("failed to close cloud-init temp file", err.Error())
+			return
+		}
+		args = append(args, "-c", tmpFile.Name())
+	}
 
-    // set_password removed (interactive-only flag not supported by Terraform)
+	// set_password removed (interactive-only flag not supported by Terraform)
 
-    // Sizing flags (best-effort). If orb does not support, we'll retry without them.
-    sizingArgs := []string{}
-    if !plan.CPUs.IsNull() && !plan.CPUs.IsUnknown() && plan.CPUs.ValueInt64() > 0 {
-        sizingArgs = append(sizingArgs, "--cpus", fmt.Sprintf("%d", plan.CPUs.ValueInt64()))
-    }
-    if !plan.MemoryMiB.IsNull() && !plan.MemoryMiB.IsUnknown() && plan.MemoryMiB.ValueInt64() > 0 {
-        sizingArgs = append(sizingArgs, "--memory", fmt.Sprintf("%d", plan.MemoryMiB.ValueInt64()))
-    }
-    if !plan.DiskSizeGiB.IsNull() && !plan.DiskSizeGiB.IsUnknown() && plan.DiskSizeGiB.ValueInt64() > 0 {
-        sizingArgs = append(sizingArgs, "--disk", fmt.Sprintf("%d", plan.DiskSizeGiB.ValueInt64()))
-    }
+	// Sizing flags (best-effort). If orb does not support, we'll retry without them.
+	sizingArgs := []string{}
+	if !plan.CPUs.IsNull() && !plan.CPUs.IsUnknown() && plan.CPUs.ValueInt64() > 0 {
+		sizingArgs = append(sizingArgs, "--cpus", fmt.Sprintf("%d", plan.CPUs.ValueInt64()))
+	}
+	if !plan.MemoryMiB.IsNull() && !plan.MemoryMiB.IsUnknown() && plan.MemoryMiB.ValueInt64() > 0 {
+		sizingArgs = append(sizingArgs, "--memory", fmt.Sprintf("%d", plan.MemoryMiB.ValueInt64()))
+	}
+	if !plan.DiskSizeGiB.IsNull() && !plan.DiskSizeGiB.IsUnknown() && plan.DiskSizeGiB.ValueInt64() > 0 {
+		sizingArgs = append(sizingArgs, "--disk", fmt.Sprintf("%d", plan.DiskSizeGiB.ValueInt64()))
+	}
 
-    // Architecture flag
-    if v := strings.TrimSpace(plan.Arch.ValueString()); v != "" {
-        args = append(args, "-a", v)
-    }
+	// Architecture flag
+	if v := strings.TrimSpace(plan.Arch.ValueString()); v != "" {
+		args = append(args, "-a", v)
+	}
 
-    // Compose image with optional tag
-    imageArg := image
-    if v := strings.TrimSpace(plan.Tag.ValueString()); v != "" {
-        imageArg = fmt.Sprintf("%s:%s", image, v)
-    }
+	// Use image directly (may include OS:VERSION format)
+	imageArg := image
 
-    // Validate image if requested
-    if plan.ValidateImage.ValueBool() {
-        known, d := listAvailableImages(ctx, cfg)
-        resp.Diagnostics.Append(d...)
-        if resp.Diagnostics.HasError() { return }
-        if _, ok := known[strings.ToLower(imageArg)]; !ok {
-            resp.Diagnostics.AddError("unknown image", fmt.Sprintf("image '%s' not found by orb", imageArg))
-            return
-        }
-    }
+	// Validate image if requested
+	if plan.ValidateImage.ValueBool() {
+		known, d := listAvailableImages(ctx, cfg)
+		resp.Diagnostics.Append(d...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		if _, ok := known[strings.ToLower(imageArg)]; !ok {
+			resp.Diagnostics.AddError("unknown image", fmt.Sprintf("image '%s' not found by orb", imageArg))
+			return
+		}
+	}
 
-    argsWithSizing := append(append([]string{}, args...), append(sizingArgs, imageArg, name)...)
-    argsNoSizing := append(append([]string{}, args...), imageArg, name)
+	argsWithSizing := append(append([]string{}, args...), append(sizingArgs, imageArg, name)...)
+	argsNoSizing := append(append([]string{}, args...), imageArg, name)
 
-    // Try create with sizing first; if it fails, retry without sizing for compatibility.
-    _, stderr, err := runOrb(ctx, cfg.OrbPath, argsWithSizing...)
-    if err != nil {
-        // retry without sizing
-        _, stderr, err = runOrb(ctx, cfg.OrbPath, argsNoSizing...)
-        if err != nil {
-            resp.Diagnostics.AddError("failed to create machine", fmt.Sprintf("orb error: %s", stderr))
-            return
-        }
-    }
+	// Try create with sizing first; if it fails, retry without sizing for compatibility.
+	_, stderr, err := runOrb(ctx, cfg.OrbPath, argsWithSizing...)
+	if err != nil {
+		// retry without sizing
+		_, stderr, err = runOrb(ctx, cfg.OrbPath, argsNoSizing...)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to create machine", fmt.Sprintf("orb error: %s", stderr))
+			return
+		}
+	}
 
-    model, diags := readUntilReady(ctx, cfg, name, cfg.CreateTimeout)
+	model, diags := readUntilReady(ctx, cfg, name, cfg.CreateTimeout)
 	resp.Diagnostics.Append(diags...)
 	if resp.Diagnostics.HasError() {
 		return
@@ -277,30 +271,30 @@ func (r *MachineResource) Create(ctx context.Context, req resource.CreateRequest
 		return
 	}
 
-    plan.ID = types.StringValue(name)
+	plan.ID = types.StringValue(name)
 	plan.IPAddress = model.IPAddress
 	plan.Status = model.Status
 	plan.SSHHost = model.SSHHost
 	plan.SSHPort = model.SSHPort
 	plan.CreatedAt = model.CreatedAt
 
-    // Enforce desired power state after creation
-    desired := strings.TrimSpace(plan.PowerState.ValueString())
-    if desired == "stopped" {
-        _, stderr, err := runOrb(ctx, cfg.OrbPath, "stop", name)
-        if err != nil {
-            resp.Diagnostics.AddError("failed to stop machine after create", fmt.Sprintf("orb error: %s", stderr))
-            return
-        }
-        // refresh
-        model, diags = readUntilReady(ctx, cfg, name, cfg.CreateTimeout)
-        resp.Diagnostics.Append(diags...)
-        if resp.Diagnostics.HasError() {
-            return
-        }
-        plan.Status = model.Status
-        plan.IPAddress = model.IPAddress
-    }
+	// Enforce desired power state after creation
+	desired := strings.TrimSpace(plan.PowerState.ValueString())
+	if desired == "stopped" {
+		_, stderr, err := runOrb(ctx, cfg.OrbPath, "stop", name)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to stop machine after create", fmt.Sprintf("orb error: %s", stderr))
+			return
+		}
+		// refresh
+		model, diags = readUntilReady(ctx, cfg, name, cfg.CreateTimeout)
+		resp.Diagnostics.Append(diags...)
+		if resp.Diagnostics.HasError() {
+			return
+		}
+		plan.Status = model.Status
+		plan.IPAddress = model.IPAddress
+	}
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
@@ -341,61 +335,61 @@ func (r *MachineResource) Read(ctx context.Context, req resource.ReadRequest, re
 }
 
 func (r *MachineResource) Update(ctx context.Context, req resource.UpdateRequest, resp *resource.UpdateResponse) {
-    // Read both state and plan to detect name changes and then apply rename
-    var plan MachineModel
-    var state MachineModel
-    resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
-    resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
+	// Read both state and plan to detect name changes and then apply rename
+	var plan MachineModel
+	var state MachineModel
+	resp.Diagnostics.Append(req.Plan.Get(ctx, &plan)...)
+	resp.Diagnostics.Append(req.State.Get(ctx, &state)...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
 
-    cfg := r.client
-    if cfg == nil {
-        resp.Diagnostics.AddError("provider not configured", "missing client configuration")
-        return
-    }
+	cfg := r.client
+	if cfg == nil {
+		resp.Diagnostics.AddError("provider not configured", "missing client configuration")
+		return
+	}
 
-    oldName := state.Name.ValueString()
-    newName := plan.Name.ValueString()
+	oldName := state.Name.ValueString()
+	newName := plan.Name.ValueString()
 
-    // If the name changed, perform a rename using orb CLI
-    if oldName != "" && newName != "" && oldName != newName {
-        args := []string{"rename", oldName, newName}
-        _, stderr, err := runOrb(ctx, cfg.OrbPath, args...)
-        if err != nil {
-            resp.Diagnostics.AddError("failed to rename machine", fmt.Sprintf("orb error: %s", stderr))
-            return
-        }
-    }
+	// If the name changed, perform a rename using orb CLI
+	if oldName != "" && newName != "" && oldName != newName {
+		args := []string{"rename", oldName, newName}
+		_, stderr, err := runOrb(ctx, cfg.OrbPath, args...)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to rename machine", fmt.Sprintf("orb error: %s", stderr))
+			return
+		}
+	}
 
-    // Power state changes
-    desired := strings.TrimSpace(plan.PowerState.ValueString())
-    if desired == "running" {
-        _, _, _ = runOrb(ctx, cfg.OrbPath, "start", newName)
-    } else if desired == "stopped" {
-        _, _, _ = runOrb(ctx, cfg.OrbPath, "stop", newName)
-    }
+	// Power state changes
+	desired := strings.TrimSpace(plan.PowerState.ValueString())
+	if desired == "running" {
+		_, _, _ = runOrb(ctx, cfg.OrbPath, "start", newName)
+	} else if desired == "stopped" {
+		_, _, _ = runOrb(ctx, cfg.OrbPath, "stop", newName)
+	}
 
-    // Re-read machine to populate all computed attributes and ensure known values
-    model, diags := readMachine(ctx, cfg, newName)
-    resp.Diagnostics.Append(diags...)
-    if resp.Diagnostics.HasError() {
-        return
-    }
-    if model == nil {
-        resp.Diagnostics.AddError("machine not found after update", newName)
-        return
-    }
+	// Re-read machine to populate all computed attributes and ensure known values
+	model, diags := readMachine(ctx, cfg, newName)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	if model == nil {
+		resp.Diagnostics.AddError("machine not found after update", newName)
+		return
+	}
 
-    plan.ID = types.StringValue(newName)
-    plan.IPAddress = model.IPAddress
-    plan.Status = model.Status
-    plan.SSHHost = model.SSHHost
-    plan.SSHPort = model.SSHPort
-    plan.CreatedAt = model.CreatedAt
+	plan.ID = types.StringValue(newName)
+	plan.IPAddress = model.IPAddress
+	plan.Status = model.Status
+	plan.SSHHost = model.SSHHost
+	plan.SSHPort = model.SSHPort
+	plan.CreatedAt = model.CreatedAt
 
-    resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
+	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
 func (r *MachineResource) Delete(ctx context.Context, req resource.DeleteRequest, resp *resource.DeleteResponse) {
@@ -478,38 +472,38 @@ func readMachine(ctx context.Context, cfg *ClientConfig, name string) (*MachineM
 
 // readUntilReady polls orb info until core fields are populated or timeout elapses.
 func readUntilReady(ctx context.Context, cfg *ClientConfig, name string, timeoutStr string) (*MachineModel, diag.Diagnostics) {
-    var diags diag.Diagnostics
-    timeout, err := time.ParseDuration(timeoutStr)
-    if err != nil || timeout <= 0 {
-        timeout = 30 * time.Second
-    }
-    deadline := time.Now().Add(timeout)
-    var last *MachineModel
-    for {
-        select {
-        case <-ctx.Done():
-            return last, diags
-        default:
-        }
-        m, d := readMachine(ctx, cfg, name)
-        diags.Append(d...)
-        if m != nil {
-            last = m
-            if isMachineReady(m) {
-                return m, diags
-            }
-        }
-        if time.Now().After(deadline) {
-            return last, diags
-        }
-        time.Sleep(2 * time.Second)
-    }
+	var diags diag.Diagnostics
+	timeout, err := time.ParseDuration(timeoutStr)
+	if err != nil || timeout <= 0 {
+		timeout = 30 * time.Second
+	}
+	deadline := time.Now().Add(timeout)
+	var last *MachineModel
+	for {
+		select {
+		case <-ctx.Done():
+			return last, diags
+		default:
+		}
+		m, d := readMachine(ctx, cfg, name)
+		diags.Append(d...)
+		if m != nil {
+			last = m
+			if isMachineReady(m) {
+				return m, diags
+			}
+		}
+		if time.Now().After(deadline) {
+			return last, diags
+		}
+		time.Sleep(2 * time.Second)
+	}
 }
 
 func isMachineReady(m *MachineModel) bool {
-    hasIP := !m.IPAddress.IsNull() && !m.IPAddress.IsUnknown() && strings.TrimSpace(m.IPAddress.ValueString()) != ""
-    hasStatus := !m.Status.IsNull() && !m.Status.IsUnknown() && strings.TrimSpace(m.Status.ValueString()) != ""
-    return hasIP && hasStatus
+	hasIP := !m.IPAddress.IsNull() && !m.IPAddress.IsUnknown() && strings.TrimSpace(m.IPAddress.ValueString()) != ""
+	hasStatus := !m.Status.IsNull() && !m.Status.IsUnknown() && strings.TrimSpace(m.Status.ValueString()) != ""
+	return hasIP && hasStatus
 }
 
 func findLineValue(text, prefix string) string {
@@ -523,12 +517,12 @@ func findLineValue(text, prefix string) string {
 }
 
 func firstNonEmpty(values ...string) string {
-    for _, v := range values {
-        if strings.TrimSpace(v) != "" {
-            return v
-        }
-    }
-    return ""
+	for _, v := range values {
+		if strings.TrimSpace(v) != "" {
+			return v
+		}
+	}
+	return ""
 }
 
 func parseSSHPort(sshLine string) int {
@@ -544,28 +538,36 @@ func parseSSHPort(sshLine string) int {
 
 // listAvailableImages returns a set of lowercased tokens of the form name or name:tag
 func listAvailableImages(ctx context.Context, cfg *ClientConfig) (map[string]struct{}, diag.Diagnostics) {
-    var diags diag.Diagnostics
-    out, _, err := runOrb(ctx, cfg.OrbPath, "images")
-    if err != nil || strings.TrimSpace(out) == "" {
-        out, _, _ = runOrb(ctx, cfg.OrbPath, "image", "list")
-    }
-    tokens := make(map[string]struct{})
-    if strings.TrimSpace(out) == "" {
-        return tokens, diags
-    }
-    // reuse simple parsing similar to datasource
-    lineTokens := strings.FieldsFunc(strings.ToLower(out), func(r rune) bool {
-        return r == '\n' || r == ' ' || r == '\t' || r == ','
-    })
-    for _, t := range lineTokens {
-        t = strings.Trim(t, ":,.;()[]{}<>\"'`")
-        if t == "" { continue }
-        if strings.Contains(t, "--") { continue }
-        if strings.HasPrefix(t, "usage:") || strings.HasPrefix(t, "aliases:") || strings.HasPrefix(t, "examples:") || strings.HasPrefix(t, "flags:") { continue }
-        // accept name or name:tag pattern
-        // quick check: starts with letter
-        if t[0] < 'a' || t[0] > 'z' { continue }
-        tokens[t] = struct{}{}
-    }
-    return tokens, diags
+	var diags diag.Diagnostics
+	out, _, err := runOrb(ctx, cfg.OrbPath, "images")
+	if err != nil || strings.TrimSpace(out) == "" {
+		out, _, _ = runOrb(ctx, cfg.OrbPath, "image", "list")
+	}
+	tokens := make(map[string]struct{})
+	if strings.TrimSpace(out) == "" {
+		return tokens, diags
+	}
+	// reuse simple parsing similar to datasource
+	lineTokens := strings.FieldsFunc(strings.ToLower(out), func(r rune) bool {
+		return r == '\n' || r == ' ' || r == '\t' || r == ','
+	})
+	for _, t := range lineTokens {
+		t = strings.Trim(t, ":,.;()[]{}<>\"'`")
+		if t == "" {
+			continue
+		}
+		if strings.Contains(t, "--") {
+			continue
+		}
+		if strings.HasPrefix(t, "usage:") || strings.HasPrefix(t, "aliases:") || strings.HasPrefix(t, "examples:") || strings.HasPrefix(t, "flags:") {
+			continue
+		}
+		// accept name or name:tag pattern
+		// quick check: starts with letter
+		if t[0] < 'a' || t[0] > 'z' {
+			continue
+		}
+		tokens[t] = struct{}{}
+	}
+	return tokens, diags
 }

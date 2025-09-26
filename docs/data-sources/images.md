@@ -31,11 +31,9 @@ Each image in the `images` list has the following attributes:
 
 | Name | Type | Description |
 |------|------|-------------|
-| `name` | `string` | The name of the image |
-| `tag` | `string` | The tag/version of the image |
-| `size` | `string` | The size of the image |
-| `created` | `string` | When the image was created |
-| `description` | `string` | Description of the image |
+| `name` | `string` | The name of the image (may include OS:VERSION format) |
+| `display_name` | `string` | Display name if provided by OrbStack |
+| `default` | `bool` | Whether this image is the default (if detectable) |
 
 ## Example Output
 
@@ -46,7 +44,6 @@ data "orbstack_images" "available" {}
 resource "orbstack_machine" "vm" {
   name = "test-vm"
   image = data.orbstack_images.available.images[0].name
-  tag  = data.orbstack_images.available.images[0].tag
 }
 ```
 

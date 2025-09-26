@@ -34,8 +34,7 @@ The following attributes are exported:
 |------|------|-------------|
 | `id` | `string` | The unique identifier of the machine |
 | `name` | `string` | The name of the machine |
-| `image` | `string` | The base image used |
-| `tag` | `string` | The image tag used |
+| `image` | `string` | The base image used (may include OS:VERSION format) |
 | `status` | `string` | The current status of the machine |
 | `ip_address` | `string` | The IP address of the machine |
 | `cpus` | `number` | Number of CPUs allocated |
