@@ -31,7 +31,6 @@ signs:
     artifacts: checksum
     signature: "${artifact}.sig"
     args:
-      - --armor
       - --batch
       - --yes
       - --pinentry-mode
