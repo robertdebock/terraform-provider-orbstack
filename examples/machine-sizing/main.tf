@@ -4,9 +4,9 @@ data "orbstack_images" "ubuntu" {
 }
 
 resource "orbstack_machine" "sized" {
-  name          = "sized-vm"
+  name = "sized-vm"
   # Pick the first ubuntu image.
-  image         = data.orbstack_images.ubuntu.images[0].name
+  image = data.orbstack_images.ubuntu.images[0].name
 
   # Sizing parameters (create-time)
   cpus          = 2
@@ -14,6 +14,6 @@ resource "orbstack_machine" "sized" {
   disk_size_gib = 40
 
   # Lifecycle state
-  power_state   = "running" # or "stopped"
+  power_state = "running" # or "stopped"
 }
 

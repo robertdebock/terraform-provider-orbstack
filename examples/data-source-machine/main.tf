@@ -4,7 +4,7 @@ resource "orbstack_machine" "example" {
 }
 
 data "orbstack_machine" "example" {
-  name       = orbstack_machine.example.name
+  name = orbstack_machine.example.name
 }
 
 
