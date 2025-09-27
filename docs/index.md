@@ -61,6 +61,10 @@ The provider supports the following configuration options:
 - [`orbstack_images`](data-sources/images.md) - List available container images
 - [`orbstack_k8s_status`](data-sources/k8s_status.md) - Get Kubernetes cluster status
 
+## Docker Integration
+
+**Note**: This provider does not include Docker container management resources. OrbStack is fully compatible with the standard Docker API, so you should use the [kreuzwerker/docker provider](https://registry.terraform.io/providers/kreuzwerker/docker/latest) for managing Docker containers.
+
 ## Examples
 
 See the [examples/](../examples/) directory for complete usage examples:
