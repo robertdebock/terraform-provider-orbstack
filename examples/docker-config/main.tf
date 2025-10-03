@@ -13,9 +13,9 @@ provider "orbstack" {
 
 # Docker Engine Configuration
 resource "orbstack_docker_config" "main" {
-  set_context           = true
-  expose_ports_to_lan  = true
-  node_name            = "orbstack-dev"
+  set_context         = true
+  expose_ports_to_lan = true
+  node_name           = "orbstack-dev"
 }
 
 # Output the status

@@ -37,7 +37,7 @@ resource "orbstack_machine" "demo" {
   image    = "ubuntu:noble"
   username = "demo"
   arch     = "arm64"
-  
+
   cloud_init = <<-EOF
     #cloud-config
     users:
