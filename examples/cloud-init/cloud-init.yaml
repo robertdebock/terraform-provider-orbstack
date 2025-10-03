@@ -1,0 +1,16 @@
+#cloud-config
+hostname: ci-file
+users:
+  - name: demo
+    sudo: ALL=(ALL) NOPASSWD:ALL
+    groups: users, admin
+    shell: /bin/bash
+    lock_passwd: true
+    ssh_authorized_keys:
+      - ssh-ed25519 AAAA...replace_with_your_public_key
+packages:
+  - curl
+  - ca-certificates
+runcmd:
+  - [ sh, -c, "echo 'Cloud-init provisioning complete' > /etc/motd" ]
+

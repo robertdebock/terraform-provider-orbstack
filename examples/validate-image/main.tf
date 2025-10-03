@@ -9,19 +9,11 @@ terraform {
 
 provider "orbstack" {}
 
-data "orbstack_images" "debian" {
-  filter = "debian"
-}
-
-locals {
-  chosen = length(data.orbstack_images.debian.images) > 0 ? data.orbstack_images.debian.images[0].name : "debian"
-}
-
 resource "orbstack_machine" "vm" {
   name           = "validate-image-vm"
   arch           = "amd64"
-  image          = local.chosen
-  validate_image = true
+  image          = "debian:bookworm"
+  validate_image = false
 }
 
 output "vm_ip" {

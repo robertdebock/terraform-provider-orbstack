@@ -14,17 +14,13 @@ resource "orbstack_machine" "example" {
   image = "ubuntu"
 }
 
-data "orbstack_images" "ubuntu" { filter = "ubuntu" }
-
-locals {
-  chosen = length(data.orbstack_images.ubuntu.images) > 0 ? data.orbstack_images.ubuntu.images[0].name : "ubuntu"
-}
+ 
 
 resource "orbstack_machine" "validate" {
   name           = "validate-image-vm"
   arch           = "amd64"
-  image          = local.chosen
-  validate_image = true
+  image          = "ubuntu:noble"
+  validate_image = false
 }
 
 resource "orbstack_machine" "ubuntu_tagged" {

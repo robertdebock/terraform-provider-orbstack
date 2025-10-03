@@ -9,7 +9,7 @@ terraform {
   required_providers {
     orbstack = {
       source  = "robertdebock/orbstack"
-      version = "~> 1.0"
+      version = "~> 3.0"
     }
   }
 }
@@ -58,7 +58,6 @@ The provider supports the following configuration options:
 ## Data Sources
 
 - [`orbstack_machine`](data-sources/machine.md) - Read information about existing machines
-- [`orbstack_images`](data-sources/images.md) - List available container images
 - [`orbstack_k8s_status`](data-sources/k8s_status.md) - Get Kubernetes cluster status
 
 ## Docker Integration
@@ -69,8 +68,7 @@ The provider supports the following configuration options:
 
 See the [examples/](../examples/) directory for complete usage examples:
 
-- [Ubuntu with cloud-init](../examples/ubuntu-cloudinit/)
-- [Debian with specific version](../examples/debian-tag/)
-- [Machine sizing and validation](../examples/machine-sizing/)
-- [Cloud-init from file](../examples/cloud-init-file/)
-- [Kubernetes cluster management](../examples/k8s/)
+- [Cloud-init](../examples/cloud-init/)
+- [Machine](../examples/machine/)
+- [Validate image](../examples/validate-image/)
+- [Kubernetes config](../examples/k8s_config/)

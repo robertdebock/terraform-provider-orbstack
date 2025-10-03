@@ -18,3 +18,7 @@
     direct {}
   }
    ```
+
+## Releasing
+
+- Tag a new release like `v3.0.0`. The GitHub Actions workflow runs GoReleaser to build and publish artifacts to the Terraform Registry.
