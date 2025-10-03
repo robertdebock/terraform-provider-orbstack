@@ -84,10 +84,6 @@ jobs:
         with:
           terraform_version: latest
 
-      - name: Init
-        working-directory: ${{ matrix.path }}
-        run: terraform init -input=false -no-color
-
       - name: Apply
         working-directory: ${{ matrix.path }}
         run: terraform apply -auto-approve -input=false -no-color
