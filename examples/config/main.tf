@@ -1,20 +1,22 @@
-# See all keys with `orb config show`.
-
-# Example: manage global memory (in MiB) and CPU count
-resource "orbstack_config" "memory" {
-  key   = "memory_mib"
-  value = "8192"
+terraform {
+  required_providers {
+    orbstack = {
+      source  = "robertdebock/orbstack"
+      version = ">= 2.0.0"
+    }
+  }
 }
 
-resource "orbstack_config" "cpu" {
-  key   = "cpu"
-  value = "8"
-}
+provider "orbstack" {}
 
-# Example: toggle Rosetta usage
-resource "orbstack_config" "rosetta" {
-  key   = "rosetta"
-  value = "true"
+# Example: manage global settings
+resource "orbstack_config" "main" {
+  cpu              = 8
+  memory_mib       = 8192
+  start_at_login   = false
+  pause_on_sleep   = true
+  rosetta_enabled  = true
+  setup_user_admin = true
 }
 
 

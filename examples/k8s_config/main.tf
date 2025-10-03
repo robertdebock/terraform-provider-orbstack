@@ -2,17 +2,15 @@ terraform {
   required_providers {
     orbstack = {
       source  = "robertdebock/orbstack"
-      version = "~> 1.0"
+      version = ">= 2.0.0"
     }
   }
 }
 
-provider "orbstack" {
-  # orb_path = "/usr/local/bin/orb"  # Optional: path to orb CLI
-}
+provider "orbstack" {}
 
 # Enable Kubernetes cluster
-resource "orbstack_k8s" "cluster" {
+resource "orbstack_k8s_config" "cluster" {
   enabled         = true
   expose_services = true
 }
@@ -43,5 +41,5 @@ output "k8s_version" {
 
 output "kubeconfig_path" {
   description = "Path to kubeconfig file"
-  value       = data.orbstack_k8s_status.cluster.kubeconfig_path
+  value       = orbstack_k8s_config.cluster.kubeconfig_path
 }

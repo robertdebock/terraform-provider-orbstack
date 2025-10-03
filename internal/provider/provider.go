@@ -94,7 +94,11 @@ func (p *OrbStackProvider) Configure(ctx context.Context, req provider.Configure
 func (p *OrbStackProvider) Resources(_ context.Context) []func() resource.Resource {
 	return []func() resource.Resource{
 		NewMachineResource,
-		NewConfigResource,
+		// NewConfigResource, // legacy key-value config (removed in v2)
+		NewOrbStackConfigResource, // now exposed as orbstack_config
+		NewDockerConfigResource,
+		NewNetworkConfigResource,
+		NewMachinesGlobalsResource, // exposed as orbstack_machine_config
 		NewK8sResource,
 	}
 }
