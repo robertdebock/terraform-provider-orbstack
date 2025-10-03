@@ -1,0 +1,118 @@
+name: Examples CI
+
+on:
+  pull_request:
+  push:
+    branches: [ master ]
+
+jobs:
+  discover:
+    name: Discover examples
+    runs-on: macos-latest
+    outputs:
+      matrix: ${{ steps.set-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Find example directories
+        id: set-matrix
+        run: |
+          EXAMPLES=$(find examples -type f -name 'main.tf' -maxdepth 2 -print0 | xargs -0 -n1 dirname | sort -u)
+          echo "Found examples:\n$EXAMPLES"
+          json="[";
+          first=1;
+          while IFS= read -r dir; do
+            if [ -z "$dir" ]; then continue; fi
+            if [ $first -eq 1 ]; then first=0; else json="$json,"; fi
+            json="$json\n  {\"path\": \"$dir\"}"
+          done <<EOF
+          $EXAMPLES
+          EOF
+          json="$json\n]"
+          echo "Matrix JSON: $json"
+          echo "matrix=$json" >> "$GITHUB_OUTPUT"
+
+  examples:
+    name: Run example
+    needs: discover
+    runs-on: macos-latest
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        include: ${{ fromJson(needs.discover.outputs.matrix) }}
+    env:
+      TF_PLUGIN_CACHE_DIR: ${{ runner.temp }}/tf-plugin-cache
+      TF_CLI_CONFIG_FILE: ${{ runner.temp }}/tfrc
+      PROVIDER_BUILD_DIR: ${{ runner.temp }}/provider
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Cache Go modules
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+          key: ${{ runner.os }}-gomod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-gomod-
+
+      - name: Ensure plugin cache dir
+        run: |
+          mkdir -p "$TF_PLUGIN_CACHE_DIR" "$PROVIDER_BUILD_DIR"
+
+      - name: Install OrbStack (Homebrew cask)
+        run: |
+          brew update
+          brew install --cask orbstack
+
+      - name: Start OrbStack
+        run: |
+          orbctl --version || true
+          orbctl start || true
+
+      - name: Build provider
+        run: |
+          go build -v -o terraform-provider-orbstack ./cmd/terraform-provider-orbstack
+          mv terraform-provider-orbstack "$PROVIDER_BUILD_DIR/terraform-provider-orbstack"
+
+      - name: Write Terraform CLI config (dev_overrides)
+        run: |
+          cat > "$TF_CLI_CONFIG_FILE" <<'EOF'
+          provider_installation {
+            dev_overrides {
+              # Map the published address to our locally built binary directory
+              "registry.terraform.io/robertdebock/orbstack" = "${PROVIDER_BUILD_DIR}"
+            }
+            direct {}
+          }
+          plugin_cache_dir = "${TF_PLUGIN_CACHE_DIR}"
+          EOF
+        shell: bash
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: latest
+
+      - name: Init
+        working-directory: ${{ matrix.path }}
+        run: terraform init -input=false -no-color
+
+      - name: Apply
+        working-directory: ${{ matrix.path }}
+        run: terraform apply -auto-approve -input=false -no-color
+
+      - name: Destroy
+        if: always()
+        working-directory: ${{ matrix.path }}
+        run: terraform destroy -auto-approve -input=false -no-color
+
