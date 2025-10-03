@@ -66,9 +66,9 @@ The provider supports the following configuration options:
 
 ## Examples
 
-See the [examples/](../examples/) directory for complete usage examples:
+See the [examples](https://github.com/robertdebock/terraform-provider-orbstack/tree/master/examples) directory for complete usage examples:
 
-- [Cloud-init](../examples/cloud-init/)
-- [Machine](../examples/machine/)
-- [Validate image](../examples/validate-image/)
-- [Kubernetes config](../examples/k8s_config/)
+- [Cloud-init](https://github.com/robertdebock/terraform-provider-orbstack/tree/master/examples/cloud-init)
+- [Machine](https://github.com/robertdebock/terraform-provider-orbstack/tree/master/examples/machine)
+- [Validate image](https://github.com/robertdebock/terraform-provider-orbstack/tree/master/examples/validate-image)
+- [Kubernetes config](https://github.com/robertdebock/terraform-provider-orbstack/tree/master/examples/k8s_config)
