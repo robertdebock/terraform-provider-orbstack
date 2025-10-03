@@ -14,10 +14,10 @@ resource "orbstack_machine" "example" {
   image = "ubuntu"
 }
 
-data "orbstack_images" "debian" { filter = "debian" }
+data "orbstack_images" "ubuntu" { filter = "ubuntu" }
 
 locals {
-  chosen = length(data.orbstack_images.debian.images) > 0 ? data.orbstack_images.debian.images[0].name : "debian"
+  chosen = length(data.orbstack_images.ubuntu.images) > 0 ? data.orbstack_images.ubuntu.images[0].name : "ubuntu"
 }
 
 resource "orbstack_machine" "validate" {
@@ -27,9 +27,9 @@ resource "orbstack_machine" "validate" {
   validate_image = true
 }
 
-resource "orbstack_machine" "debian_tagged" {
-  name  = "debian-12-vm"
-  image = "debian:bookworm"
+resource "orbstack_machine" "ubuntu_tagged" {
+  name  = "ubuntu-noble-vm"
+  image = "ubuntu:noble"
 }
 
 resource "orbstack_machine" "username_arch" {
