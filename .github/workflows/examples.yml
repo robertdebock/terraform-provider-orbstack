@@ -6,42 +6,23 @@ on:
     branches: [ master ]
 
 jobs:
-  discover:
-    name: Discover examples
-    runs-on: macos-latest
-    outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Find example directories
-        id: set-matrix
-        run: |
-          EXAMPLES=$(find examples -type f -name 'main.tf' -maxdepth 2 -print0 | xargs -0 -n1 dirname | sort -u)
-          echo "Found examples:\n$EXAMPLES"
-          json="[";
-          first=1;
-          while IFS= read -r dir; do
-            if [ -z "$dir" ]; then continue; fi
-            if [ $first -eq 1 ]; then first=0; else json="$json,"; fi
-            json="$json\n  {\"path\": \"$dir\"}"
-          done <<EOF
-          $EXAMPLES
-          EOF
-          json="$json\n]"
-          echo "Matrix JSON: $json"
-          echo "matrix=$json" >> "$GITHUB_OUTPUT"
-
   examples:
     name: Run example
-    needs: discover
     runs-on: macos-latest
     strategy:
       fail-fast: false
       max-parallel: 4
       matrix:
-        include: ${{ fromJson(needs.discover.outputs.matrix) }}
+        include:
+          - path: examples/config
+          - path: examples/docker-config
+          - path: examples/k8s_config
+          - path: examples/network-config
+          - path: examples/machine-config
+          - path: examples/machine
+          - path: examples/cloud-init
+          - path: examples/data-source-machine
+          - path: examples/validate-image
     env:
       TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.tf-plugin-cache
       TF_CLI_CONFIG_FILE: ${{ github.workspace }}/.tfrc
