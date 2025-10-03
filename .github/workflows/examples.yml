@@ -43,9 +43,9 @@ jobs:
       matrix:
         include: ${{ fromJson(needs.discover.outputs.matrix) }}
     env:
-      TF_PLUGIN_CACHE_DIR: ${{ runner.temp }}/tf-plugin-cache
-      TF_CLI_CONFIG_FILE: ${{ runner.temp }}/tfrc
-      PROVIDER_BUILD_DIR: ${{ runner.temp }}/provider
+      TF_PLUGIN_CACHE_DIR: ${{ github.workspace }}/.tf-plugin-cache
+      TF_CLI_CONFIG_FILE: ${{ github.workspace }}/.tfrc
+      PROVIDER_BUILD_DIR: ${{ github.workspace }}/.provider
     steps:
       - name: Checkout
         uses: actions/checkout@v4
