@@ -72,6 +72,9 @@ func (r *MachineResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			"image": schema.StringAttribute{
 				Optional:    true,
 				Description: "Base image/distribution (e.g., ubuntu, debian, alpine). Use OS:VERSION format for specific versions (e.g., ubuntu:noble, debian:bookworm). Default ubuntu.",
+				PlanModifiers: []planmodifier.String{
+					stringplanmodifier.RequiresReplace(),
+				},
 			},
 			"cloud_init": schema.StringAttribute{
 				Optional:    true,
