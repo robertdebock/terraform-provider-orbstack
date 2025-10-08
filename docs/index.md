@@ -20,8 +20,9 @@ provider "orbstack" {
 
 # Create a Linux machine
 resource "orbstack_machine" "vm" {
-  name   = "demo-vm"
-  image  = "ubuntu:noble"  # Use OS:VERSION format for specific versions
+  name            = "demo-vm"
+  image           = "ubuntu:noble"  # Use OS:VERSION format for specific versions
+  default_machine = true            # Set as the default machine
 }
 
 # Manage OrbStack settings

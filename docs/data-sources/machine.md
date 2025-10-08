@@ -16,6 +16,10 @@ output "machine_ip" {
 output "machine_status" {
   value = data.orbstack_machine.existing.status
 }
+
+output "is_default_machine" {
+  value = data.orbstack_machine.existing.default_machine
+}
 ```
 
 ## Argument Reference
@@ -37,10 +41,10 @@ The following attributes are exported:
 | `image` | `string` | The base image used (may include OS:VERSION format) |
 | `status` | `string` | The current status of the machine |
 | `ip_address` | `string` | The IP address of the machine |
-| `cpus` | `number` | Number of CPUs allocated |
-| `memory_mib` | `number` | Memory allocated in MiB |
-| `disk_gb` | `number` | Disk size in GB |
-| `power_state` | `string` | Current power state (running, stopped, etc.) |
+| `ssh_host` | `string` | SSH host (usually same as ip_address) |
+| `ssh_port` | `number` | SSH port |
+| `created_at` | `string` | Creation time as reported by orb info |
+| `default_machine` | `bool` | Whether this machine is the current default machine |
 
 ## Notes
 

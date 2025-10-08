@@ -2,7 +2,7 @@ terraform {
   required_providers {
     orbstack = {
       source  = "robertdebock/orbstack"
-      version = ">= 2.0.0"
+      version = ">= 3.1.0"
     }
   }
 }
@@ -10,8 +10,9 @@ terraform {
 provider "orbstack" {}
 
 resource "orbstack_machine" "example" {
-  name  = "example-vm"
-  image = "ubuntu"
+  name            = "example-vm"
+  image           = "ubuntu"
+  default_machine = true
 }
 
  

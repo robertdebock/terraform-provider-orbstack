@@ -6,10 +6,11 @@ The `orbstack_machine` resource creates and manages Linux machines in OrbStack.
 
 ```hcl
 resource "orbstack_machine" "vm" {
-  name     = "demo-vm"
-  image    = "ubuntu:noble"  # Use OS:VERSION format for specific versions
-  username = "demo"          # Username for the default user
-  arch     = "arm64"         # Architecture: amd64 or arm64
+  name            = "demo-vm"
+  image           = "ubuntu:noble"  # Use OS:VERSION format for specific versions
+  username        = "demo"           # Username for the default user
+  arch            = "arm64"          # Architecture: amd64 or arm64
+  default_machine = true             # Set this machine as the default
   
   cloud_init = <<-EOF
     #cloud-config
@@ -36,6 +37,7 @@ The following arguments are supported:
 | `cloud_init_file` | `string` | No | - | Path to a cloud-init user data file. Overrides `cloud_init` if both set |
 | `validate_image` | `bool` | No | `false` | Validate image exists before create; fail fast if unknown |
 | `power_state` | `string` | No | - | Desired power state: `running` or `stopped` |
+| `default_machine` | `bool` | No | `false` | Set this machine as the default machine for OrbStack. Only one machine can be the default. |
 
 ## Attributes Reference
 
@@ -54,6 +56,7 @@ In addition to all arguments above, the following attributes are exported:
 | `ssh_port` | `number` | SSH port |
 | `created_at` | `string` | Creation time as reported by orb info |
 | `power_state` | `string` | Current power state (running, stopped, etc.) |
+| `default_machine` | `bool` | Whether this machine is the current default machine |
 
 ## Notes
 
@@ -63,3 +66,4 @@ In addition to all arguments above, the following attributes are exported:
 - The `cloud_init_file` argument takes precedence over `cloud_init` if both are specified
 - **Architecture**: Use `arch = "arm64"` for Apple Silicon or `arch = "amd64"` for Intel-based systems. If an invalid architecture is specified, OrbStack will return an error during creation.
 - **Username**: If not specified, defaults to your macOS username
+- **Default Machine**: Only one machine can be set as the default at a time. Setting `default_machine = true` on one machine will automatically unset the default status from any other machine. The default machine is the one you connect to when running `orb` without specifying a machine name.

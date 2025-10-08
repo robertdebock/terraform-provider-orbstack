@@ -45,6 +45,9 @@ type MachineModel struct {
 	PowerState types.String `tfsdk:"power_state"`
 	Arch       types.String `tfsdk:"arch"`
 
+	// Default machine setting
+	DefaultMachine types.Bool `tfsdk:"default_machine"`
+
 	IPAddress types.String `tfsdk:"ip_address"`
 	Status    types.String `tfsdk:"status"`
 	SSHHost   types.String `tfsdk:"ssh_host"`
@@ -113,6 +116,10 @@ func (r *MachineResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 				PlanModifiers: []planmodifier.String{
 					stringplanmodifier.RequiresReplace(),
 				},
+			},
+			"default_machine": schema.BoolAttribute{
+				Optional:    true,
+				Description: "Set this machine as the default machine for OrbStack. Only one machine can be the default.",
 			},
 			"ip_address": schema.StringAttribute{
 				Computed:    true,
@@ -270,6 +277,15 @@ func (r *MachineResource) Create(ctx context.Context, req resource.CreateRequest
 		plan.IPAddress = model.IPAddress
 	}
 
+	// Set as default machine if requested
+	if plan.DefaultMachine.ValueBool() {
+		_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", name)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to set default machine", fmt.Sprintf("orb error: %s", stderr))
+			return
+		}
+	}
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -304,6 +320,14 @@ func (r *MachineResource) Read(ctx context.Context, req resource.ReadRequest, re
 	state.SSHHost = model.SSHHost
 	state.SSHPort = model.SSHPort
 	state.CreatedAt = model.CreatedAt
+
+	// Check if this machine is the current default
+	isDefault, diags := r.isDefaultMachine(ctx, cfg, name)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	state.DefaultMachine = types.BoolValue(isDefault)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &state)...)
 }
@@ -343,6 +367,26 @@ func (r *MachineResource) Update(ctx context.Context, req resource.UpdateRequest
 		_, _, _ = runOrb(ctx, cfg.OrbPath, "start", newName)
 	} else if desired == "stopped" {
 		_, _, _ = runOrb(ctx, cfg.OrbPath, "stop", newName)
+	}
+
+	// Handle default machine changes
+	oldDefault := state.DefaultMachine.ValueBool()
+	newDefault := plan.DefaultMachine.ValueBool()
+
+	if newDefault && !oldDefault {
+		// Set this machine as default
+		_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", newName)
+		if err != nil {
+			resp.Diagnostics.AddError("failed to set default machine", fmt.Sprintf("orb error: %s", stderr))
+			return
+		}
+	} else if !newDefault && oldDefault {
+		// Unset default machine
+		_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", "none")
+		if err != nil {
+			resp.Diagnostics.AddError("failed to unset default machine", fmt.Sprintf("orb error: %s", stderr))
+			return
+		}
 	}
 
 	// Re-read machine to populate all computed attributes and ensure known values
@@ -508,6 +552,20 @@ func parseSSHPort(sshLine string) int {
 		return p
 	}
 	return 22
+}
+
+// isDefaultMachine checks if the given machine is the current default
+func (r *MachineResource) isDefaultMachine(ctx context.Context, cfg *ClientConfig, machineName string) (bool, diag.Diagnostics) {
+	var diags diag.Diagnostics
+
+	out, _, err := runOrb(ctx, cfg.OrbPath, "default")
+	if err != nil {
+		diags.AddError("orb default failed", err.Error())
+		return false, diags
+	}
+
+	currentDefault := strings.TrimSpace(out)
+	return currentDefault == machineName, diags
 }
 
 // listAvailableImages returns a set of lowercased tokens of the form name or name:tag
