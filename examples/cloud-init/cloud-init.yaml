@@ -14,4 +14,3 @@ packages:
 runcmd:
   - [ sh, -c, "echo 'Cloud-init provisioning complete' > /etc/motd" ]
 
-
