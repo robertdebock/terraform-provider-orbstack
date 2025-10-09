@@ -14,6 +14,7 @@ import (
 	"github.com/hashicorp/terraform-plugin-framework/path"
 	"github.com/hashicorp/terraform-plugin-framework/resource"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema"
+	"github.com/hashicorp/terraform-plugin-framework/resource/schema/boolplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/planmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/resource/schema/stringplanmodifier"
 	"github.com/hashicorp/terraform-plugin-framework/schema/validator"
@@ -119,7 +120,11 @@ func (r *MachineResource) Schema(_ context.Context, _ resource.SchemaRequest, re
 			},
 			"default_machine": schema.BoolAttribute{
 				Optional:    true,
+				Computed:    true,
 				Description: "Set this machine as the default machine for OrbStack. Only one machine can be the default.",
+				PlanModifiers: []planmodifier.Bool{
+					boolplanmodifier.UseStateForUnknown(),
+				},
 			},
 			"ip_address": schema.StringAttribute{
 				Computed:    true,
@@ -369,23 +374,24 @@ func (r *MachineResource) Update(ctx context.Context, req resource.UpdateRequest
 		_, _, _ = runOrb(ctx, cfg.OrbPath, "stop", newName)
 	}
 
-	// Handle default machine changes
+	// Handle default machine changes only when explicitly set in config
 	oldDefault := state.DefaultMachine.ValueBool()
-	newDefault := plan.DefaultMachine.ValueBool()
-
-	if newDefault && !oldDefault {
-		// Set this machine as default
-		_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", newName)
-		if err != nil {
-			resp.Diagnostics.AddError("failed to set default machine", fmt.Sprintf("orb error: %s", stderr))
-			return
-		}
-	} else if !newDefault && oldDefault {
-		// Unset default machine
-		_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", "none")
-		if err != nil {
-			resp.Diagnostics.AddError("failed to unset default machine", fmt.Sprintf("orb error: %s", stderr))
-			return
+	if !plan.DefaultMachine.IsNull() && !plan.DefaultMachine.IsUnknown() {
+		newDefault := plan.DefaultMachine.ValueBool()
+		if newDefault && !oldDefault {
+			// Set this machine as default
+			_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", newName)
+			if err != nil {
+				resp.Diagnostics.AddError("failed to set default machine", fmt.Sprintf("orb error: %s", stderr))
+				return
+			}
+		} else if !newDefault && oldDefault {
+			// Unset default machine
+			_, stderr, err := runOrb(ctx, cfg.OrbPath, "default", "none")
+			if err != nil {
+				resp.Diagnostics.AddError("failed to unset default machine", fmt.Sprintf("orb error: %s", stderr))
+				return
+			}
 		}
 	}
 
