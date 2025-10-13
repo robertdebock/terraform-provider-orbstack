@@ -291,6 +291,14 @@ func (r *MachineResource) Create(ctx context.Context, req resource.CreateRequest
 		}
 	}
 
+	// Always refresh default_machine to a known value after create
+	isDefault, diags := r.isDefaultMachine(ctx, cfg, name)
+	resp.Diagnostics.Append(diags...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.DefaultMachine = types.BoolValue(isDefault)
+
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
 
@@ -412,6 +420,14 @@ func (r *MachineResource) Update(ctx context.Context, req resource.UpdateRequest
 	plan.SSHHost = model.SSHHost
 	plan.SSHPort = model.SSHPort
 	plan.CreatedAt = model.CreatedAt
+
+	// Refresh default_machine to a known value after update
+	isDefaultAfter, diags2 := r.isDefaultMachine(ctx, cfg, newName)
+	resp.Diagnostics.Append(diags2...)
+	if resp.Diagnostics.HasError() {
+		return
+	}
+	plan.DefaultMachine = types.BoolValue(isDefaultAfter)
 
 	resp.Diagnostics.Append(resp.State.Set(ctx, &plan)...)
 }
