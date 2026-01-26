@@ -9,7 +9,7 @@ terraform {
   required_providers {
     orbstack = {
       source  = "robertdebock/orbstack"
-      version = "~> 3.0"
+      version = ">= 3.1.0"
     }
   }
 }
@@ -23,12 +23,6 @@ resource "orbstack_machine" "vm" {
   name            = "demo-vm"
   image           = "ubuntu:noble"  # Use OS:VERSION format for specific versions
   default_machine = true            # Set as the default machine
-}
-
-# Manage OrbStack settings
-resource "orbstack_config" "memory" {
-  key   = "memory_mib"
-  value = "8192"
 }
 ```
 
